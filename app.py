@@ -47,10 +47,15 @@ TRIGGER_DERIVACION = [
 @app.route("/webhook", methods=["POST"])
 def responder():
     try:
-        datos = request.get_json(silent=True)
+        try:
+            datos = request.get_json(force=True)  # 🔧 fuerza el parseo del JSON aunque falte header
+        except Exception as err:
+            print("⚠️ Error al leer JSON:", err)
+            return jsonify({"respuesta": "No pude leer tu consulta 🙈"}), 400
+
         if not datos:
-            print("⚠️ No se recibió JSON válido en el POST")
-            return jsonify({"respuesta": "No se recibió una consulta válida 🙈"}), 400
+            print("⚠️ No llegó ningún dato en el body")
+            return jsonify({"respuesta": "No se recibió información válida 🙈"}), 400
 
         print("🔎 JSON recibido desde Watson:")
         print(json.dumps(datos, indent=2, ensure_ascii=False))
