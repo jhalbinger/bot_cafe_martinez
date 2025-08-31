@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 import json
 from collections import defaultdict, deque
 import requests
-import traceback  # NUEVO: para mostrar errores completos
+import traceback
 
 load_dotenv()
 
@@ -22,7 +22,7 @@ client = openai.OpenAI(
 
 app = Flask(__name__)
 
-print("✅ Arrancó el app.py de Café Martínez 🧾")  # DEBUG
+print("✅ Arrancó el app.py de Café Martínez 🧾")
 
 # === CONTEXTO FIJO ===
 txt_path = "cafe_martinez.txt"
@@ -35,8 +35,8 @@ else:
 
 # === Memoria en RAM por usuario ===
 historial_conversacion = defaultdict(lambda: deque(maxlen=4))
-estado_usuario = {}        # para saber si ya fue derivado o está esperando confirmación
-producto_usuario = {}      # último producto detectado por usuario
+estado_usuario = {}
+producto_usuario = {}
 
 TRIGGER_DERIVACION = [
     "hablar con alguien", "pasar con", "asesor", "humano",
@@ -47,7 +47,11 @@ TRIGGER_DERIVACION = [
 @app.route("/webhook", methods=["POST"])
 def responder():
     try:
-        datos = request.get_json()
+        datos = request.get_json(silent=True)
+        if not datos:
+            print("⚠️ No se recibió JSON válido en el POST")
+            return jsonify({"respuesta": "No se recibió una consulta válida 🙈"}), 400
+
         print("🔎 JSON recibido desde Watson:")
         print(json.dumps(datos, indent=2, ensure_ascii=False))
 
@@ -95,7 +99,7 @@ def responder():
         return respuesta_normal
 
     except Exception as e:
-        traceback.print_exc()  # NUEVO
+        traceback.print_exc()
         print("💥 Error detectado:", e)
         return jsonify({"respuesta": "Estoy tardando en procesar tu consulta, intentá de nuevo en unos segundos 🙏"}), 200
 
